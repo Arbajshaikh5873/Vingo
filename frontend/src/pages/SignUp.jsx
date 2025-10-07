@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
-
+import { FcGoogle } from "react-icons/fc";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { serverUrl } from "../App";
 function SignUp() {
   const primaryColor = "#ff4d2d";
   const hoverColor = "#e64323";
@@ -9,6 +12,30 @@ function SignUp() {
   const borderColor = "#ddd";
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("user");
+  const navigate = useNavigate();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mobile, setMobile] = useState("");
+
+  const handleSignUp = async () => {
+    try {
+      const result = await axios.post(
+        `${serverUrl}/api/auth/signup`,
+        {
+          fullName,
+          email,
+          password,
+          mobile,
+          role,
+        },
+        { withCredentials: true }
+      );
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div
@@ -43,6 +70,10 @@ function SignUp() {
             className="w-full border rounded-lg px-3 py-2 focus:outline-none"
             placeholder="Enter your Full Name"
             style={{ border: `1px solid ${borderColor}` }}
+            onChange={(e) => {
+              setFullName(e.target.value);
+            }}
+            value={fullName}
           />
         </div>
 
@@ -60,6 +91,10 @@ function SignUp() {
             className="w-full border  border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
             placeholder="Enter your Email"
             style={{ border: `1px solid ${borderColor}` }}
+            onChange={(e) => {
+              setEmail(e.target.value);
+            }}
+            value={email}
           />
         </div>
 
@@ -77,6 +112,10 @@ function SignUp() {
             className="w-full border  border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
             placeholder="Enter your mobile number"
             style={{ border: `1px solid ${borderColor}` }}
+            onChange={(e) => {
+              setMobile(e.target.value);
+            }}
+            value={mobile}
           />
         </div>
 
@@ -95,6 +134,10 @@ function SignUp() {
               className="w-full border  border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
               placeholder="Enter your Password"
               style={{ border: `1px solid ${borderColor}` }}
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+              value={password}
             />
             <button
               className="absolute right-3 top-[14px] text-grey-500"
@@ -136,9 +179,29 @@ function SignUp() {
 
         <button
           className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
+          onClick={() => {
+            handleSignUp();
+          }}
         >
           Sign Up{" "}
         </button>
+
+        <button className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-200 cursor-pointer">
+          <FcGoogle />
+          <span>Sign up with Google </span>
+        </button>
+        <p className="text-center mt-6 cursor-pointer">
+          {" "}
+          Already have an account ?{" "}
+          <span
+            className="text-[#ff4d2d]"
+            onClick={() => {
+              navigate("/signin");
+            }}
+          >
+            Sign in{" "}
+          </span>
+        </p>
       </div>
     </div>
   );
