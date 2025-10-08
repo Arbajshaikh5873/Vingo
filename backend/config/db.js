@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
+import { DB_NAME } from "../constants.js";
 
-async function connectDb() {
+async function connectDB() {
   try {
-    await mongoose.connect(process.env.MONGODB_URL);
-    console.log("db Connected");
+    // mongoose.set("strictQuery", true);
+    const connectionInstance = await mongoose.connect(
+      `${process.env.MONGODB_URL}/${DB_NAME}`
+    );
+    console.log("db Connected : ", connectionInstance.connection.host);
   } catch (error) {
     console.log(error);
+    process.exit(1);
   }
 }
 
-export default connectDb;
+export default connectDB;
