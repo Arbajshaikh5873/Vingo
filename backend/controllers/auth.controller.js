@@ -101,14 +101,14 @@ export const sendOtp = async function (req, res) {
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-     user.resetOtp = otp;
+    user.resetOtp = otp;
 
     user.otpExpires = Date.now() + 5 * 60 * 1000;
 
     user.isOtpVerified = false;
 
     await user.save();
-    console.log('OTP generated and saved for', email);
+    console.log("OTP generated and saved for", email);
     await sendOtpMail(email, otp);
     return res.status(200).json({ message: "Otp send Successfully " });
   } catch (error) {
@@ -157,5 +157,34 @@ export const resetPassword = async function (req, res) {
     return res.status(200).json({ message: "Password reset successfully " });
   } catch (error) {
     return res.status(500).json({ message: "reset password error " + error });
+  }
+};
+
+export const googleAuth = async (req, res) => {
+  try {
+    const { fullName, email, mobile, role } = req.body;
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        fullName,
+        email,
+        mobile: mobile || "",
+        role: role || "user",
+      });
+    }
+
+    const token = genToken(user._id);
+
+    res.cookie("token", token, {
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 1000,
+      httpOnly: true,
+    });
+
+    res.status(200).json(user);
+
+  } catch (error) {
+    res.status(500).json({ message: `googleAuth error ${error}` });
   }
 };

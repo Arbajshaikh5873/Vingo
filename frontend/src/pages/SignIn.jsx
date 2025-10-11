@@ -5,6 +5,9 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { serverUrl } from "../App";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../firebase";
+import { ClipLoader } from "react-spinners";
 function SignIn() {
   const primaryColor = "#ff4d2d";
   const hoverColor = "#e64323";
@@ -14,8 +17,11 @@ function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
+    setLoading(true);
     try {
       const result = await axios.post(
         `${serverUrl}/api/auth/signIn`,
@@ -26,8 +32,32 @@ function SignIn() {
         { withCredentials: true }
       );
       console.log(result);
+      setErr("");
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
       console.log(error);
+      setErr(error?.response?.data?.message);
+    }
+  };
+
+  const handleGoogleAuth = async function () {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      console.log(result, " : sign in with pop up response ");
+      const { data } = await axios.post(
+        `${serverUrl}/api/auth/google-auth`,
+        {
+          email: result.user.email,
+        },
+        { withCredentials: true }
+      );
+      setErr("");
+      console.log(data);
+    } catch (error) {
+      console.log(`Google Authentication Error ${error}`);
+      setErr(error?.response?.data?.message);
     }
   };
 
@@ -64,6 +94,7 @@ function SignIn() {
             className="w-full border  border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
             placeholder="Enter your Email"
             style={{ border: `1px solid ${borderColor}` }}
+            required
             onChange={(e) => {
               setEmail(e.target.value);
             }}
@@ -86,6 +117,7 @@ function SignIn() {
               className="w-full border  border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
               placeholder="Enter your Password"
               style={{ border: `1px solid ${borderColor}` }}
+              required
               onChange={(e) => {
                 setPassword(e.target.value);
               }}
@@ -112,11 +144,17 @@ function SignIn() {
           onClick={() => {
             handleSignIn();
           }}
+          disabled={loading}
         >
-          Sign In{" "}
+          {loading ? <ClipLoader size={20} color="white" /> : "Sign In"}
         </button>
 
-        <button className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-200 cursor-pointer">
+        {err && <p className="text-red-500 text-center my-[10px]">*{err}</p>}
+
+        <button
+          className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-200 cursor-pointer"
+          onClick={handleGoogleAuth}
+        >
           <FcGoogle />
           <span>Sign In with Google </span>
         </button>

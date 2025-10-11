@@ -3,6 +3,7 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import { serverUrl } from "../App";
 import axios from "axios";
+import { ClipLoader } from "react-spinners";
 
 function ForgotPassword() {
   const [setp, setStep] = useState(1);
@@ -11,8 +12,12 @@ function ForgotPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSendOtp = async () => {
+    setLoading(true);
+
     try {
       const result = await axios.post(
         `${serverUrl}/api/auth/send-otp`,
@@ -21,12 +26,17 @@ function ForgotPassword() {
       );
       console.log(result);
       setStep(2);
+      setErr("");
+      setLoading(false);
     } catch (error) {
+      setErr(error?.response?.data?.message);
       console.log(error);
+      setLoading(false);
     }
   };
 
   const handleVerifyOtp = async function () {
+    setLoading(true);
     try {
       const result = await axios.post(
         `${serverUrl}/api/auth/verify-otp`,
@@ -35,8 +45,12 @@ function ForgotPassword() {
       );
       console.log(result);
       setStep(3);
+      setErr("");
+      setLoading(false);
     } catch (error) {
       console.log(error);
+      setErr(error?.response?.data?.message);
+      setLoading(false);
     }
   };
 
@@ -44,6 +58,7 @@ function ForgotPassword() {
     if (newPassword != confirmPassword) {
       return null;
     }
+    setLoading(true);
     try {
       const result = await axios.post(
         `${serverUrl}/api/auth/reset-password`,
@@ -53,8 +68,12 @@ function ForgotPassword() {
       console.log(result);
       setStep(1);
       navigate("/signin");
+      setErr("");
+      setLoading(false);
     } catch (error) {
       console.log(error);
+      setErr(error?.response?.data?.message);
+      setLoading(false);
     }
   };
 
@@ -91,14 +110,19 @@ function ForgotPassword() {
                   setEmail(e.target.value);
                 }}
                 value={email}
+                required
               />
             </div>
             <button
               className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
               onClick={handleSendOtp}
             >
-              Send OTP{" "}
+              {loading ? <ClipLoader size={20} color="white" /> : "Send OTP"}
             </button>
+
+            {err && (
+              <p className="text-red-500 text-center my-[10px]">*{err}</p>
+            )}
           </div>
         )}
 
@@ -120,6 +144,7 @@ function ForgotPassword() {
                 onChange={(e) => {
                   setOtp(e.target.value);
                 }}
+                required
                 value={otp}
               />
             </div>
@@ -127,8 +152,12 @@ function ForgotPassword() {
               className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
               onClick={handleVerifyOtp}
             >
-              Verify{" "}
+              {loading ? <ClipLoader size={20} color="white" /> : "Verify"}{" "}
             </button>
+
+            {err && (
+              <p className="text-red-500 text-center my-[10px]">*{err}</p>
+            )}
           </div>
         )}
 
@@ -150,6 +179,7 @@ function ForgotPassword() {
                 onChange={(e) => {
                   setNewPassword(e.target.value);
                 }}
+                required
                 value={newPassword}
               />
             </div>
@@ -176,8 +206,16 @@ function ForgotPassword() {
               className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`}
               onClick={handleResetPassword}
             >
-              Reset Password{" "}
+              {loading ? (
+                <ClipLoader size={20} color="white" />
+              ) : (
+                "Reset Password"
+              )}{" "}
             </button>
+
+            {err && (
+              <p className="text-red-500 text-center my-[10px]">*{err}</p>
+            )}
           </div>
         )}
       </div>

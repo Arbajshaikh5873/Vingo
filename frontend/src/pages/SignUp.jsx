@@ -5,6 +5,10 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { serverUrl } from "../App";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../firebase";
+import { ClipLoader } from "react-spinners";
+
 function SignUp() {
   const primaryColor = "#ff4d2d";
   const hoverColor = "#e64323";
@@ -17,8 +21,30 @@ function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mobile, setMobile] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState("");
 
   const handleSignUp = async () => {
+    setLoading(true);
+    const trimmedFullName = fullName.trim();
+    if (!trimmedFullName) {
+      setError("Full name is required");
+      return;
+    }
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !/\S+@\S+\.\S+/.test(trimmedEmail)) {
+      setError("Valid email is required");
+      return;
+    }
+    const trimmedMobile = mobile.trim();
+    if (!trimmedMobile || !/^\d{10}$/.test(trimmedMobile)) {
+      setError("Mobile number must be exactly 10 digits");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
     try {
       const result = await axios.post(
         `${serverUrl}/api/auth/signup`,
@@ -32,8 +58,40 @@ function SignUp() {
         { withCredentials: true }
       );
       console.log(result);
-    } catch (error) {
-      console.log(error);
+      setError("");
+      setLoading(false);
+    } catch (err) {
+      setError(err?.response?.data?.message);
+      console.log(err);
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async function () {
+    const trimmedMobile = mobile.trim();
+    if (!trimmedMobile || !/^\d{10}$/.test(trimmedMobile)) {
+      setError("Mobile number must be exactly 10 digits");
+      return;
+    }
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      console.log(result, " : sign in with pop up response ");
+      const { data } = await axios.post(
+        `${serverUrl}/api/auth/google-auth`,
+        {
+          fullName: result.user.displayName,
+          email: result.user.email,
+          role,
+          mobile,
+        },
+        { withCredentials: true }
+      );
+
+      console.log(data);
+    } catch (err) {
+      console.log(`Google Authentication Error ${err}`);
+      setError(err?.response?.data?.message);
     }
   };
 
@@ -73,6 +131,7 @@ function SignUp() {
             onChange={(e) => {
               setFullName(e.target.value);
             }}
+            required
             value={fullName}
           />
         </div>
@@ -94,6 +153,7 @@ function SignUp() {
             onChange={(e) => {
               setEmail(e.target.value);
             }}
+            required
             value={email}
           />
         </div>
@@ -115,6 +175,7 @@ function SignUp() {
             onChange={(e) => {
               setMobile(e.target.value);
             }}
+            required
             value={mobile}
           />
         </div>
@@ -122,7 +183,7 @@ function SignUp() {
         {/* Password */}
         <div className="mb-4">
           <label
-            htmlFor="mobile"
+            htmlFor="password"
             className="block text-gray-700 font-medium mb-1"
           >
             {" "}
@@ -138,6 +199,7 @@ function SignUp() {
                 setPassword(e.target.value);
               }}
               value={password}
+              required
             />
             <button
               className="absolute right-3 top-[14px] text-grey-500"
@@ -182,11 +244,19 @@ function SignUp() {
           onClick={() => {
             handleSignUp();
           }}
+          disabled={loading}
         >
-          Sign Up{" "}
+          {loading ? <ClipLoader size={20} color="white" /> : "Sign Up"}
         </button>
 
-        <button className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-200 cursor-pointer">
+        {error && (
+          <p className="text-red-500 text-center my-[10px]">* {error}</p>
+        )}
+
+        <button
+          className="w-full mt-4 flex items-center justify-center gap-2 border rounded-lg px-4 py-2 transition duration-200 border-gray-400 hover:bg-gray-200 cursor-pointer"
+          onClick={handleGoogleAuth}
+        >
           <FcGoogle />
           <span>Sign up with Google </span>
         </button>
