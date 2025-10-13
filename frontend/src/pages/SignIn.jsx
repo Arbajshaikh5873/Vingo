@@ -8,6 +8,8 @@ import { serverUrl } from "../App";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/userSlice";
 function SignIn() {
   const primaryColor = "#ff4d2d";
   const hoverColor = "#e64323";
@@ -19,6 +21,7 @@ function SignIn() {
   const navigate = useNavigate();
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const handleSignIn = async () => {
     setLoading(true);
@@ -31,6 +34,7 @@ function SignIn() {
         },
         { withCredentials: true }
       );
+      dispatch(setUserData(result.data));
       console.log(result);
       setErr("");
       setLoading(false);
@@ -54,6 +58,7 @@ function SignIn() {
         { withCredentials: true }
       );
       setErr("");
+      dispatch(setUserData(data));
       console.log(data);
     } catch (error) {
       console.log(`Google Authentication Error ${error}`);
@@ -164,7 +169,7 @@ function SignIn() {
           <span
             className="text-[#ff4d2d]"
             onClick={() => {
-              navigate("/signin");
+              navigate("/signup");
             }}
           >
             Sign Up{" "}

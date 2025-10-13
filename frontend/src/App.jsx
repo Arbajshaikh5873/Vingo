@@ -1,13 +1,17 @@
 import React, { useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
 import { getRedirectResult } from "firebase/auth";
 import { auth } from "../firebase";
+import useGetCurrentUser from "./hooks/useGetCurrentUser";
+import { useSelector } from "react-redux";
+import Home from "./pages/Home";
+import useGetCity from "./hooks/useGetCity";
 
-export const serverUrl = `http://localhost:8000`;
+export const serverUrl = "http://localhost:8000";
 function App() {
   useEffect(() => {
     const handleRedirectResult = async () => {
@@ -24,11 +28,30 @@ function App() {
     handleRedirectResult();
   }, []);
 
+  useGetCurrentUser();
+  useGetCity();
+
+  const { userData } = useSelector((state) => state.user);
+  console.log("Current user data:", userData);
   return (
     <Routes>
-      <Route path="/signin" element={<SignIn />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route
+        path="/"
+        element={userData ? <Home /> : <Navigate to="/signup" />}
+      />
+      <Route
+        path="/signin"
+        element={!userData ? <SignIn /> : <Navigate to="/" />}
+      />
+      <Route
+        path="/signup"
+        element={!userData ? <SignUp /> : <Navigate to="/" />}
+      />
+
+      <Route
+        path="/forgot-password"
+        element={!userData ? <ForgotPassword /> : <Navigate to="/" />}
+      />
     </Routes>
   );
 }

@@ -8,6 +8,8 @@ import { serverUrl } from "../App";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/userSlice";
 
 function SignUp() {
   const primaryColor = "#ff4d2d";
@@ -23,26 +25,32 @@ function SignUp() {
   const [mobile, setMobile] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState("");
+  const dispatch = useDispatch();
 
   const handleSignUp = async () => {
     setLoading(true);
     const trimmedFullName = fullName.trim();
     if (!trimmedFullName) {
       setError("Full name is required");
+      setLoading(false);
       return;
     }
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !/\S+@\S+\.\S+/.test(trimmedEmail)) {
       setError("Valid email is required");
+      setLoading(false);
       return;
     }
     const trimmedMobile = mobile.trim();
     if (!trimmedMobile || !/^\d{10}$/.test(trimmedMobile)) {
       setError("Mobile number must be exactly 10 digits");
+      setLoading(false);
       return;
     }
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
+
+      setLoading(false);
       return;
     }
     try {
@@ -57,6 +65,8 @@ function SignUp() {
         },
         { withCredentials: true }
       );
+
+      dispatch(setUserData(result.data));
       console.log(result);
       setError("");
       setLoading(false);
@@ -88,6 +98,7 @@ function SignUp() {
         { withCredentials: true }
       );
 
+      dispatch(setUserData(data));
       console.log(data);
     } catch (err) {
       console.log(`Google Authentication Error ${err}`);

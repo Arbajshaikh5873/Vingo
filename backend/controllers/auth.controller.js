@@ -2,6 +2,8 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import genToken from "../utils/token.js";
 import { sendOtpMail } from "../utils/mail.js";
+import { isAuth } from "../middleware/isAuth.js";
+import { getCurrentUser } from "./user.controller.js";
 
 export async function signUp(req, res) {
   try {
@@ -35,11 +37,11 @@ export async function signUp(req, res) {
       role,
     });
 
-    const token = genToken(user._id);
+    const token = await genToken(user._id);
 
     res.cookie("token", token, {
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 1000,
       httpOnly: true,
     });
@@ -66,15 +68,14 @@ export async function signIn(req, res) {
       return res.status(400).json({ message: "password incorrect" });
     }
 
-    const token = genToken(user._id);
+    const token = await genToken(user._id);
 
     res.cookie("token", token, {
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 1000,
       httpOnly: true,
     });
-
     return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ message: `sign In error ${error}` });
@@ -173,17 +174,16 @@ export const googleAuth = async (req, res) => {
       });
     }
 
-    const token = genToken(user._id);
+    const token = await genToken(user._id);
 
     res.cookie("token", token, {
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 1000,
       httpOnly: true,
     });
 
     res.status(200).json(user);
-
   } catch (error) {
     res.status(500).json({ message: `googleAuth error ${error}` });
   }
